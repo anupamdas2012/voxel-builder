@@ -1,0 +1,1508 @@
+<!--
+    Aug 2019
+    nimadez.github.io
+    https://github.com/nimadez/voxel-builder
+
+    MIT License
+
+    Copyright (c) 2019 Nima Dez. (@nimadez)
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+    -------------------------------------------------------------------------------------------
+    
+    1. Engine/RenderLoop        initialize engine and start render loop
+    2. Main Scene               initialize main scene
+    3. Axis-View Scene          initialize axis view
+    4. Materials                initialize and setup defaultMaterial
+    5. Voxels                   create and manipulate voxels/SPS.mesh, store all voxel positions and colors
+    6. Overlays & Helpers       create, clone and dispose
+    7. Tools                    camera, add, remove, transform, hide, paint, pickcolor, fillcolor, hidecolor
+    8. Interactions             handle mouse down, mouse move, mouse up (+touch)
+    9. HDR & Rendering          create and dispose environment HDR, toggle high-quality rendering pipeline
+    10. Files                   new, load (.vox), save (.vox), import voxelized (.obj) and export (.glb)     
+    11. Local Storage           using HTML5 storage for quick save and restore
+    12. Create                  create presets
+    13. Events                  control all events, the events core
+    14. Utilities: babylon      babylon and engine related utils
+    15. Utilities: html         html related utils
+    16. Startup                 load startup project
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <title>Voxel Builder</title>
+    <link rel="icon" href="data:image/png;base64,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">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script src="https://cdn.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; }
+        html, body { overscroll-behavior-y: contain; user-select: none; } /* prevent pull-down refresh and text selection on chrome mobile */
+        body { font-family: sans-serif; font-size: 11px; color: #cccccc; cursor: default; }
+        a { color: slategray; text-decoration: none; }
+        a:hover { color: orange; text-decoration: none; }
+        canvas { z-index: 0; position: absolute; width: 100%; height: 100%; outline: none; background: radial-gradient(circle, rgb(81, 90, 109) 0%, rgb(49, 53, 68) 100%); }
+        ul { background: #5f62702f; position: absolute; list-style-type: none; }
+        ul li { background: #272e38; border: 1px solid #161a2096; border-radius: 5px; padding: 3px; text-align: center; }
+        ul li:hover, ul li.select, ul li.toggle { background: orange; color: #222; cursor: pointer; }
+        ul li.separator { background: none; height: 5px; padding: 0; cursor: default; border: none; }
+        ul li.spacer { background: none; height: 5px; padding: 0; cursor: default; border: none; }
+        input[type=color] { width: 18px; height: 18px; border: none; background: #2e35414d; outline: none; border: none; border-radius: 50%; vertical-align: text-bottom; }
+        input[type=color]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type=color]::-webkit-color-swatch { border: none; border-radius: 20%; }
+        input[type=color]:hover { background: white; cursor: pointer; }
+        input[type=number] { width: 45px; margin-bottom: 1px; background: #2a313db7; color: silver; padding: 2px; font-size: 11px; text-indent: 5px; border: solid 1px #343c49; border-radius: 3px; text-align: left; outline: none; }
+        input[type=number]:hover { color: orange; }
+        input[type=checkbox] { display: none; }
+        input[type=checkbox] + .material-icons::after { content:"check_box_outline_blank"; color: #515c6b; }
+        input[type=checkbox]:checked + .material-icons::after { content:"check_box"; color: orange; }
+        button { width: 100%; background-color: #353f4d; color: #bbb; border-radius: 4px; padding: 3px; font-size: 11px; border: 1px solid #161a20bd; outline: none; }
+        button:hover { background-color: orange; color: #222; cursor: pointer; }
+        label { color: #7a8ca5; margin-right: 5px; }
+        #menuH_L { background: none; left: 5px; top: 5px; }
+        #menuH_L li { display: inline-block; width: 30px; padding: 1px; }
+        #menuH_R { background: none; right: 5px; top: 5px; }
+        #menuH_R li { display: inline-block; width: 30px; padding: 1px; }
+        #menuV { z-index: 999; position: fixed; top: 0; right: 0; background: #222731f8; padding: 10px; width: 120px; height: 100%; transform: translate(200px, 0); transition: -webkit-transform 0.2s ease; }
+        #menuV li { background: none; text-align: left; border: none; padding: 0; color: #7a8ca5; }
+        #menuV li:hover { background: none; color: orange; }
+        #menuV .category { color: #43495a; background: #1e222b; font-size: 10px; font-weight: bold; text-align: center; margin: 8px 4px 8px 0; padding: 2px; }
+        #menuV .category:hover { color: #43495a; background: #1e222b; cursor: default; }
+        #toolbar_R { right: 5px; top: 80px; padding: 3px; border-radius: 5px; }
+        #toolbar_R li { margin-bottom: 2px; }
+        #toolbar_L { left: 5px; top: 80px; padding: 3px; border-radius: 5px; }
+        #toolbar_L li { margin-bottom: 2px; }
+        #color_palette { left: 5px; top: 210px; padding: 3px; border-radius: 5px; }
+        #color_palette li { width: 18px; height: 5px; margin-bottom: 1px; }
+        #color_palette li:hover { border: solid 1px orange; }
+        #hover { z-index: 1; background: none; left: 60%; top: 120px; }
+        #hover li:nth-child(1) { cursor: move; }
+        #hover li:nth-child(2) { position: absolute; top: -110%; left: 0%; }
+        #hover li:nth-child(3) { position: absolute; top: 0%; left: 110%; }
+        #hover li:nth-child(4) { position: absolute; top: 0%; left: -110%; }
+        #hover li:nth-child(5) { position: absolute; top: 110%; left: 0%; }
+        #axisview { background: #161a203f; bottom: 5px; right: 4px; width: 68px; height: 68px; border: 1px solid #161a2096; border-radius: 50%; }
+        #axisview li { border-radius: 50%; padding: 3px; color: #161a20; border: 1px solid #161a2096; }
+        #axisview li:nth-child(1) { position: absolute; top: -28%; right: 0%; }
+        #axisview li:nth-child(2) { position: absolute; top: -36%; right: 44%; }
+        #axisview li:nth-child(3) { position: absolute; top: -18%; right: 83%; }
+        #axisview li:nth-child(4) { position: absolute; top: 22%; right: 103%; }
+        #axisview li:nth-child(5) { position: absolute; top: 65%; right: 97%; }
+        #loadingscreen { display: none; z-index: 999; position: absolute; width: 100%; height: 100%; background: #000000bb; }
+        #loadingscreen .spinner { position: absolute; top: 50%; left: 50%; margin-left: -50px; margin-top: -50px; border-radius: 50%; border: 2px solid orange; animation: spin 2s infinite linear; }
+        #loadingscreen .spinner .mask { padding: 10px; background: #313846; border-radius: 25%; overflow: hidden; text-align: center; }
+        #notifier { opacity: 0; transition: opacity 0.5s; position: absolute; left: 50%; top: 5px; margin-left: -50px; padding: 2px 4px 2px 4px; background: orange; color: #000; font-size:11px; font-weight: bold; border-radius: 5px; }
+        #notifier.fade { opacity: 1; }
+        #status { position: absolute; bottom: 5px; left: 5px; font-size: 10px; font-weight: bold; opacity: 0.8; color: #999; }
+        #status span { color: #eee; }
+        ::-webkit-scrollbar { display: none; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .material-icons { font-size: 18px; pointer-events: none; vertical-align: middle; text-align: center; }
+    </style>
+</head>
+<body>
+    <canvas></canvas>
+    <ul id="menuH_L">
+        <li title="High Quality" onclick="toggleHighQuality(); toggleButton(this)"><i class="material-icons">camera</i></li>
+        <li title="Fit Camera" onclick="fitCameraToMesh()"><i class="material-icons">filter_center_focus</i></li>
+    </ul>
+    <ul id="menuH_R">
+        <li title="Quick Load" onclick="getStorage()"><i class="material-icons">reply_all</i></li>
+        <li title="Quick Save" onclick="setStorage()"><i class="material-icons">save</i></li>
+        <li title="Main Menu" onclick="document.getElementById('show_menuV').click()"><i class="material-icons">menu</i></li>
+    </ul>
+    <ul id="menuV">
+        <li onclick="document.getElementById('exit_menuV').click()"><i class="material-icons">exit_to_app</i></li>
+        <li class="category">FILE</li>
+        <li title="New project"><button onclick="newProject()">New</button></li>
+        <li title="Load .vox project"><button onclick="document.getElementById('openfile_vox').click()">Load</button></li>
+        <li title="Save project to .vox"><button onclick="saveProject()">Save</button></li>
+        <li title="Import .obj and voxelize"><button onclick="document.getElementById('openfile_obj').click()">Import</button></li>
+        <li title="Export project to .glb"><button onclick="exportMesh()">Export</button></li>
+        <li class="spacer"></li>
+        <li title="Voxelization quality (higher = larger model)"><label>Import Quality <input id="user-input-voxelization" type="number" value="30" min="1" max="50" style="width: 37px"></label></li>
+        <li class="category">HDRI</li>
+        <li title="Load environment"><button onclick="document.getElementById('openfile_hdr').click()">Load</button></li>
+        <li title="Remove environment"><button onclick="removeHDR()">Remove</button></li>
+        <li class="spacer"></li>
+        <li title="Show skybox" onclick="toggleSkybox()"><input type="checkbox" id="check_skybox"><i class="material-icons"></i> Background</li>
+        <li class="category">CREATE</li>
+        <li>
+            <label>X&nbsp;&nbsp; <input id="user-input-create-x" type="number" value="5" min="1" max="100"></label><br>
+            <label>Y&nbsp;&nbsp; <input id="user-input-create-y" type="number" value="6" min="1" max="100"></label><br>
+            <label>Z&nbsp;&nbsp; <input id="user-input-create-z" type="number" value="5" min="1" max="100"></label><br>
+            <button onclick="createGrid()">Grid</button>
+            <button onclick="createRandom()">Random</button>
+        </li>
+        <li class="category">VIEW</li>
+        <li onclick="toggleFullscreen()"><input type="checkbox" id="check_fullscreen"><i class="material-icons"></i> Fullscreen</li>
+        <li class="spacer"></li>
+        <li onclick="toggleCameraAutoRotation()"><input type="checkbox" id="check_autorotation"><i class="material-icons"></i> Auto Rotation</li>
+        <li class="spacer"></li>
+        <li><label>Light &nbsp;<input type="number" value="120" min="0" max="360" step="10" oninput="setLightPositionByAngle(scene.lights[1], this.value, 50, 100); updateShadowMap();"> °</label></li>
+        <li class="category">SCENE</li>
+        <li><button onclick="optimize()">Optimize Scene</button></li>
+        <li class="category">ABOUT</li>
+        <li style="text-align: center"><label style="opacity: 0.6;">©2019 Nima Dez.</label></li>
+        <li class="spacer"></li>
+        <li style="text-align: center; opacity: 0.7; line-height: 1.5em;">
+            <a href="https://github.com/nimadez">GitHub Profile</a><br>
+            <a href="https://github.com/nimadez/voxel-builder">Repository</a>
+        </li>
+    </ul>
+    <ul id="toolbar_L">
+        <li title="Paint Color" onclick="tool = 'paint'; clearButtons(this)"><i class="material-icons">brush</i></li>
+        <li title="Fill Color" onclick="tool = 'fillcolor'; clearButtons(this)"><i class="material-icons">format_paint</i></li>
+        <li class="separator"></li>
+        <li title="Pick Color" onclick="tool = 'pickcolor'; clearButtons(this)"><i class="material-icons">colorize</i></li>
+        <li title="Color Picker" onclick="document.getElementById('inputcolor').click()"><input type="color" id="inputcolor" value="#3876C0"></li>
+    </ul>
+    <ul id="toolbar_R">
+        <li title="Hide By Voxel" onclick="tool = 'hide'; clearButtons(this)"><i class="material-icons">layers_clear</i></li>
+        <li title="Hide By Color" onclick="tool = 'hidecolor'; clearButtons(this)"><i class="material-icons">format_color_reset</i></li>
+        <li title="Unhide All" onclick="setParticlesVisibility(true)"><i class="material-icons">remove_red_eye</i></li>
+        <li title="Freeze Visibility" onclick="freezeVisibility()"><i class="material-icons">ac_unit</i></li>
+        <li class="separator"></li>
+        <li title="Normalize Position" onclick="normalizeVoxelPositions()"><i class="material-icons">equalizer</i></li>
+    </ul>
+    <ul id="axisview">
+        <li title="Grid Texture" onclick="toggleShowGridTexture(); toggleButton(this)"><i class="material-icons" style="font-size:14px">grain</i></li>
+        <li title="Bounding Box" onclick="toggleBoundingBox(); toggleButton(this)""><i class="material-icons" style="font-size:14px">select_all</i></li>
+        <li title="Wireframe" onclick="toggleShowWireframe(); toggleButton(this)"><i class="material-icons" style="font-size:14px">flip</i></li>
+        <li title="Shadow Catcher" onclick="toggleShadowCatcher(); toggleButton(this)"><i class="material-icons" style="font-size:14px">brightness_6</i></li>
+        <li title="Ground" onclick="toggleGround(); toggleButton(this)"><i class="material-icons"  style="font-size:14px">remove</i></li>
+    </ul>
+    <ul id="hover">
+        <li title="Free Camera" onpointerdown="dragElement(this)" onclick="tool = 'camera'; clearButtons(this)" class="select"><i class="material-icons">control_camera</i></li>
+        <li title="Add" onclick="tool = 'add'; setParticlesVisibility(true); clearButtons(this)"><i class="material-icons">create</i></li>
+        <li title="Remove" onclick="tool = 'remove'; setParticlesVisibility(true); clearButtons(this)"><i class="material-icons">clear</i></li>
+        <li title="Transform" onclick="tool = 'transform'; setParticlesVisibility(true); clearButtons(this)"><i class="material-icons">border_inner</i></li>
+    </ul>
+    <!-- dynamic -->
+    <ul id="color_palette" title="Color Palette"></ul>
+    <div id="loadingscreen"><div class="spinner"><div class="mask"><i class="material-icons" style="font-size: 30px; color: orange">donut_large</i></div></div></div>
+    <div id="notifier"></div>
+    <div id="status">
+        <span id="fps" style="font-size: 11px">00</span> | <span id="voxels">0</span><i> Voxels</i> | <span id="verts">0</span><i> Verts</i> | <span id="tris">0</span><i> Tris</i>
+    </div>
+    <!-- hidden -->
+    <div style="display: none" id="show_menuV" onclick="document.getElementById('menuV').style.transform = 'translate(0, 0)'"></div>
+    <div style="display: none" id="exit_menuV" onclick="document.getElementById('menuV').style.transform = 'translate(200px, 0)'"></div>
+    <input style="display: none" type="file" id="openfile_vox" accept=".vox" onclick="this.value = null">
+    <input style="display: none" type="file" id="openfile_obj" accept=".obj" onclick="this.value = null">
+    <input style="display: none" type="file" id="openfile_hdr" accept=".hdr" onclick="this.value = null">
+</body>
+<script>
+    const canvas = document.querySelectorAll('canvas')[0];
+    const numFps = document.getElementById('fps');
+    const notifier = document.getElementById('notifier');
+    const inputColor = document.getElementById('inputcolor');
+    let currentColor = inputColor.value.toUpperCase();
+
+    // -----------------------------------------------------------------------------------
+    // Engine/RenderLoop -----------------------------------------------------------------
+
+    const engine = new BABYLON.Engine(canvas, true, null, false);
+    engine.disablePerformanceMonitorInBackground = true;
+    engine.enableOfflineSupport = false;
+    engine.doNotHandleContextLost = true;
+    engine.useHighPrecisionFloats = false;
+
+    const scene = createScene(engine);
+    const sceneAxisView = createAxisViewScene(engine);
+    
+    engine.runRenderLoop(function () {
+        beginPerformanceMonitor();
+        scene.render();
+        sceneAxisView.render();
+        sceneAxisView.activeCamera.alpha = scene.activeCamera.alpha;
+        sceneAxisView.activeCamera.beta = scene.activeCamera.beta;
+        endPerformanceMonitor();
+    });
+    
+    // -----------------------------------------------------------------------------------
+    // Main Scene ------------------------------------------------------------------------
+
+    function createScene(engine) {
+        const scene = new BABYLON.Scene(engine);
+        scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
+        scene.autoClear = false;
+        scene.autoClearDepthAndStencil = false;
+        scene.blockMaterialDirtyMechanism = true;
+        //scene.debugLayer.show();
+
+        const camera = new BABYLON.ArcRotateCamera("camera", 0, 0, 10, BABYLON.Vector3.Zero(), scene);
+        camera.attachControl(canvas, true);
+        camera.setPosition(new BABYLON.Vector3(20, 15, 20));
+        camera.setTarget(new BABYLON.Vector3(0, 2, 0));
+        camera.panningSensibility = 300;
+        camera.wheelPrecision = 10;
+        camera.lowerRadiusLimit = 3;
+        camera.upperRadiusLimit = 200;
+        if (isMobileDevice()) camera.pinchPrecision = 100;
+
+        const ambient = new BABYLON.HemisphericLight("ambient", new BABYLON.Vector3(0, 1, 0), scene);
+        ambient.diffuse = new BABYLON.Color3(0.5, 0.5, 0.5);
+        ambient.specular = new BABYLON.Color3(0, 0, 0);
+        ambient.groundColor = new BABYLON.Color3(0.4, 0.4, 0.4);
+        ambient.intensity = 0.3;
+
+        const light = new BABYLON.DirectionalLight("light", new BABYLON.Vector3(0, -1, 0), scene);
+        setLightPositionByAngle(light, 120, 50, 100);
+        light.autoUpdateExtends = true;
+        light.diffuse = new BABYLON.Color3(1, 1, 1);
+        light.intensity = 1;
+
+        const shadowGen = new BABYLON.ShadowGenerator(512, light); // shadows updated manually on SPS.mesh changes,
+        shadowGen.getShadowMap().refreshRate = BABYLON.RenderTargetTexture.REFRESHRATE_RENDER_ONCE; // to save performance
+        shadowGen.filteringQuality = BABYLON.ShadowGenerator.QUALITY_LOW;
+        shadowGen.useExponentialShadowMap = false;
+        shadowGen.usePercentageCloserFiltering = true;
+        shadowGen.setDarkness(0.6);
+
+        const grid = BABYLON.MeshBuilder.CreateGround("grid", {width: 20, height: 20}, scene);
+        grid.material = new BABYLON.GridMaterial("grid", scene);
+        grid.material.backFaceCulling = false;
+        grid.material.gridRatio = 1;
+        grid.material.mainColor = new BABYLON.Color3(0.6, 0.6, 0.6);
+        grid.material.lineColor = new BABYLON.Color3(0.7, 0.7, 0.7);
+        grid.material.opacity = 0.3;
+        grid.material.freeze();
+        grid.position.y = -0.5;
+        grid.isPickable = false;
+        grid.doNotSyncBoundingInfo = true;
+        grid.convertToUnIndexedMesh();
+        grid.freezeWorldMatrix();
+        grid.freezeNormals();
+
+        const shadowcatcher = BABYLON.MeshBuilder.CreateGround("shadowcatcher", {width: 100, height: 100}, scene);
+        shadowcatcher.material = new BABYLON.ShadowOnlyMaterial('shadowcatcher', scene);
+        shadowcatcher.material.shadowColor = new BABYLON.Color3.FromHexString('#161a20');
+        shadowcatcher.material.activeLight = light;
+        shadowcatcher.material.backFaceCulling = true;
+        shadowcatcher.material.alpha = 0.3;
+        shadowcatcher.position.y = -0.5;
+        shadowcatcher.receiveShadows = true;
+        shadowcatcher.isPickable = false;
+        shadowcatcher.doNotSyncBoundingInfo = true;
+        shadowcatcher.convertToUnIndexedMesh();
+        shadowcatcher.freezeWorldMatrix();
+        shadowcatcher.freezeNormals();
+
+        return scene;
+    }
+
+    // -----------------------------------------------------------------------------------
+    // Axis-View Scene -------------------------------------------------------------------
+
+    function createAxisViewScene(engine) {
+        const scene = new BABYLON.Scene(engine);
+        scene.autoClear = false;
+        scene.autoClearDepthAndStencil = false;
+        scene.blockMaterialDirtyMechanism = true;
+
+        const ambient = new BABYLON.HemisphericLight("ambient", new BABYLON.Vector3(0, -1, 0), scene);
+        ambient.diffuse = new BABYLON.Color3(1, 1, 1);
+        ambient.groundColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+        ambient.intensity = 3.0;
+
+        const camera = new BABYLON.ArcRotateCamera("camera", 0, 0, 10, BABYLON.Vector3.Zero(), scene);
+        camera.viewport = updateViewport(80, 80, 0, 0);
+        camera.radius = 3;
+
+        const cube = BABYLON.MeshBuilder.CreateBox("viewcube", {}, scene);
+        cube.material = new BABYLON.NormalMaterial("viewcube", scene);
+        cube.material.backFaceCulling = true;
+        cube.material.alpha = 0.9;
+        cube.material.freeze();
+        cube.doNotSyncBoundingInfo = true;
+        cube.enableEdgesRendering();
+        cube.edgesWidth = 2;
+        cube.edgesColor = new BABYLON.Color4.FromHexString('#3b404e'+'FF');
+        cube.convertToUnIndexedMesh(); // after edgesRendering
+        cube.freezeWorldMatrix();
+        cube.freezeNormals();
+
+        return scene;
+    }
+
+    // -----------------------------------------------------------------------------------
+    // Materials -------------------------------------------------------------------------
+
+    const gridTexture = createGridTexture();
+    const defaultMaterial = createMaterial(gridTexture);
+
+    function createGridTexture() {
+        const texture = new BABYLON.DynamicTexture('dynagrid', 128, scene, BABYLON.Texture.LINEAR_LINEAR);
+        const ctx = texture.getContext();
+        ctx.lineWidth = 2; // draw grid
+        ctx.strokeStyle = "#CCCCCC";
+        ctx.beginPath();
+        ctx.moveTo(0, 64);
+        ctx.lineTo(128, 64);
+        ctx.moveTo(64, 0);
+        ctx.lineTo(64, 128);
+        ctx.stroke();
+        ctx.lineWidth = 4; // draw outline
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.strokeRect(0, 0, 128, 128);
+        texture.update();
+        texture.hasAlpha = true;
+        return texture;
+    }
+
+    function createMaterial(gridTex) {
+        const mat = new BABYLON.PBRMaterial("defaultMaterial", scene);
+        mat.backFaceCulling = true;
+        mat.albedoColor = new BABYLON.Color3(1, 1, 1);
+        mat.emissiveIntensity = 0.2;
+        mat.emissiveColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+        mat.emissiveTexture = gridTex;
+        mat.reflectionTexture = gridTex;
+        mat.metallic = 0;
+        mat.roughness = 0.75;
+        mat.cameraContrast = 2; // mimic toon shading
+        mat.cameraExposure = 1;
+        mat.environmentIntensity = 1;
+        return mat;
+    }
+
+    // -----------------------------------------------------------------------------------
+    // Voxels ----------------------------------------------------------------------------
+
+    let voxels = []; // 2D array: [0]position(vector3) [1]color(hex uppercase no-opacity)
+    let SPS = null;
+
+    function createBlock(data) {
+        if (voxels.length > 0)
+            voxels = [];
+        for (let i in data)
+            addVoxel(data[i].position, data[i].color);
+        createSPS();
+        updateShadowMap();
+        createPalette();
+        fitCameraToMesh();
+        // reset toggles
+        clearAllToggles();
+        clearAllToggleButtons();
+    }
+
+    function addVoxel(pos, hex) {
+        voxels.push({ position: pos, color: hex });
+    }
+
+    function removeVoxel(pos) {
+        let index = -1;
+        for (let i in voxels) { // need to find voxel by position, because array index
+            if (voxels[i].position.equals(pos)) { // changes after multiple removes
+                index = voxels.indexOf(voxels[i]);
+                if (index > -1)
+                    voxels.splice(index, 1);
+                return; // find voxel, break loop
+            }
+        }
+    }
+
+    function createSPS() {
+        if (SPS) {
+            SPS.dispose();
+            SPS = null;
+        }
+        SPS = new BABYLON.SolidParticleSystem('SPS', scene, { isPickable: true, updatable: true });
+
+        const builder = function(particle, i, s) { // s = index shape
+            particle.position.copyFrom(voxels[i].position);
+            particle.color = new BABYLON.Color4.FromHexString(voxels[i].color + 'FF');
+        }
+        const voxel = BABYLON.MeshBuilder.CreateBox("voxel", {}, scene);
+        SPS.addShape(voxel, voxels.length, { positionFunction: builder });
+        voxel.dispose();
+
+        const mesh = SPS.buildMesh();
+        mesh.material = defaultMaterial;
+        mesh.receiveShadows = true;
+        mesh.doNotSyncBoundingInfo = true;
+        mesh.cullingStrategy = BABYLON.AbstractMesh.CULLINGSTRATEGY_BOUNDINGSPHERE_ONLY;
+        mesh.freezeWorldMatrix();
+        mesh.freezeNormals();
+        scene.lights[1].getShadowGenerator().addShadowCaster(mesh);
+
+        SPS.initParticles();
+        SPS.setParticles();         // update SPS mesh and draw it
+        SPS.refreshVisibleSize();   // update BBox for picking and shadows
+        SPS.computeBoundingBox = true;
+        SPS.computeParticleColor = true;
+        SPS.computeParticleRotation = false;
+        SPS.computeParticleTexture = false;
+        SPS.computeParticleVertex = false;
+        updateStatus();
+    }
+
+    function updateSPS() {
+        SPS.setParticles();
+        updateShadowMap();
+    }
+
+    function updateParticle(index) {
+        SPS.setParticles(index, index, true);
+        updateShadowMap();
+    }
+
+    function setVoxelPosition(index, pos) {
+        voxels[index].position = pos;
+        SPS.particles[index].position = pos;
+    }
+
+    function setVoxelColor(index, hex) {
+        voxels[index].color = hex;
+        SPS.particles[index].color = new BABYLON.Color4.FromHexString(hex + 'FF');
+    }
+
+    // generate color palette from current voxel colors
+    function createPalette() {
+        document.getElementById('color_palette').innerHTML = ""; // clear palette
+        let uniqueColors = [];
+        for (let i in voxels) {
+            if (uniqueColors.indexOf(voxels[i].color) == -1) {
+                addColorToPalette(voxels[i].color);
+                uniqueColors.push(voxels[i].color);
+            }
+        }
+        uniqueColors = null;
+    }
+
+    // -----------------------------------------------------------------------------------
+    // Overlays & Helpers ----------------------------------------------------------------
+
+    let dummyVoxels = []; // voxels for visualization only
+
+    const overlayCube = BABYLON.MeshBuilder.CreateBox("overlay_cube", {}, scene);
+    overlayCube.isVisible = false;
+    overlayCube.isPickable = false;
+    overlayCube.visibility = 0.1;
+    overlayCube.renderOverlay = true;
+    overlayCube.overlayAlpha = 0.5;
+    overlayCube.edgesWidth = 2;
+    overlayCube.doNotSyncBoundingInfo = true;
+    overlayCube.enableEdgesRendering();
+    overlayCube.convertToUnIndexedMesh();
+    overlayCube.freezeNormals();
+
+    const overlayPlane = BABYLON.MeshBuilder.CreatePlane("overlay_plane", { sideOrientation: BABYLON.Mesh.DOUBLESIDE }, scene);
+    overlayPlane.isVisible = false;
+    overlayPlane.isPickable = false;
+    overlayPlane.visibility = 0.1;
+    overlayPlane.renderOverlay = true;
+    overlayPlane.overlayAlpha = 0.5;
+    overlayPlane.doNotSyncBoundingInfo = true;
+    overlayPlane.convertToUnIndexedMesh();
+    overlayPlane.freezeNormals();
+
+    const dummyVoxel = BABYLON.MeshBuilder.CreateBox("dummy_voxel", {}, scene);
+    dummyVoxel.isVisible = false;
+    dummyVoxel.material = defaultMaterial;
+    dummyVoxel.scaling.copyFromFloats(1.001, 1.001, 1.001); // prevent overlaps
+    dummyVoxel.visibility = 1;
+    dummyVoxel.renderOverlay = true;
+    dummyVoxel.overlayAlpha = 0.3;
+    dummyVoxel.doNotSyncBoundingInfo = true;
+    dummyVoxel.convertToUnIndexedMesh();
+    dummyVoxel.freezeWorldMatrix();
+    dummyVoxel.freezeNormals();
+    
+    function setOverlayCube(pos, scale, hex) {
+        overlayCube.isVisible = true;
+        overlayCube.overlayColor = new BABYLON.Color3.FromHexString(hex);
+        overlayCube.edgesColor = new BABYLON.Color4.FromHexString(hex + 'FF');
+        overlayCube.position = pos;
+        overlayCube.scaling = scale;
+    }
+
+    function setOverlayPlane(pos, normAxis, hex) {
+        overlayPlane.isVisible = true;
+        overlayPlane.overlayColor = new BABYLON.Color3.FromHexString(hex);
+        overlayPlane.position = pos;
+        const axis = BABYLON.Vector3.Cross(BABYLON.Axis.Z, normAxis);
+        const angle = Math.acos(BABYLON.Vector3.Dot(normAxis, BABYLON.Axis.Z));
+        overlayPlane.rotationQuaternion = BABYLON.Quaternion.RotationAxis(axis, angle);
+    }
+
+    function cloneDummyVoxel(pos, hex) {
+        const clone = dummyVoxel.clone();
+        clone.isVisible = true;
+        clone.position = pos;
+        clone.overlayColor = new BABYLON.Color3.FromHexString(hex);
+        dummyVoxels.push(clone);
+    }
+
+    function clearDummyVoxels() {
+        if (dummyVoxels.length > 0) {
+            for (let i in dummyVoxels)
+                dummyVoxels[i].dispose();
+            dummyVoxels = [];
+        }
+    }
+
+    function clearOverlays() {
+        overlayCube.isVisible = false;
+        overlayPlane.isVisible = false;
+    }
+
+    // -----------------------------------------------------------------------------------
+    // Tools -----------------------------------------------------------------------------
+
+    let tool = 'camera';
+    let selected = [];
+
+    function toolAdd(pos) {
+        for (let i in selected) // no duplicates
+            if (selected[i].equals(pos))
+                return;
+        addVoxel(pos, currentColor);
+        cloneDummyVoxel(pos, "#00FF00");
+        selected.push(pos);
+    }
+
+    function toolRemove(pos) {
+        if (voxels.length <= 1) return; // 1 voxel minimum
+        for (let i in selected) // no duplicates
+            if (selected[i].equals(pos))
+                return;
+        cloneDummyVoxel(pos, "#FF0000");
+        selected.push(pos); // removing voxels later, prevent infinite-depth picking
+    }
+
+    function toolTransform(posBegin, posEnd, index) {
+        for (let i in selected) // no duplicates
+            if (selected[i].equals(posBegin))
+                return;
+        setVoxelPosition(index, posEnd);
+        updateParticle(index, index, true);
+        selected.push(posEnd);
+    }
+
+    function toolHide(particle) {
+        cloneDummyVoxel(particle.position, "#FFFF00");
+        selected.push(particle); // hiding voxels later, prevent infinite-depth picking
+    }
+
+    function toolPaint(index) {
+        setVoxelColor(index, currentColor);
+        updateParticle(index, index, true);
+        selected.push(""); // need to refresh palette on toolSwitchEnd()
+    }
+
+    function toolPickColor(hexcolor) {
+        inputColor.value = hexcolor;
+        currentColor = hexcolor;
+    }
+
+    function toolFillColor(hexcolor) {
+        for (let i in voxels) {
+            if (voxels[i].color === hexcolor) {
+                setVoxelColor(i, currentColor);
+            }
+        }
+        selected.push("");
+    }
+
+    function toolHideColor(hexcolor) {
+        let color = null;
+        for (let i in SPS.particles) {
+            color = SPS.particles[i].color.toHexString();
+            color = color.substring(0, color.length - 2);
+            if (color === hexcolor)
+               SPS.particles[i].isVisible = false;
+        }
+        selected.push("");
+    }
+    
+    function toolSwitchStart(pick) {
+        if (pick.faceId == -1) return;
+        const index = SPS.pickedParticles[pick.faceId].idx;
+        const particle = SPS.particles[index];
+        const pos = particle.position;
+        const norm = pick.getNormal();
+        switch (tool) {
+            case 'add':
+                setOverlayPlane(pos.add(norm.scale(0.5)), norm, '#00FF00');
+                if (isMouseDown && pauseCameraControls())
+                    toolAdd(pos.add(norm));
+                break;
+            case 'remove':
+                setOverlayCube(pos, BABYLON.Vector3.One(), '#FF0000');
+                if (isMouseDown && pauseCameraControls())
+                    toolRemove(pos);
+                break;
+            case 'transform':
+                setOverlayCube(pos.add(norm), norm, '#00FFFF');
+                setOverlayPlane(pos.add(norm.scale(0.5)), norm, '#00FFFF');
+                if (isMouseDown && pauseCameraControls())
+                    toolTransform(pos, pos.add(norm), index);
+                break;
+            case 'hide':
+                setOverlayCube(pos, BABYLON.Vector3.One(), '#FFFF00');
+                if (isMouseDown && pauseCameraControls())
+                    toolHide(particle);
+                break;
+            case 'paint':
+                setOverlayPlane(pos.add(norm.scale(0.5)), norm, currentColor);
+                if (isMouseDown && pauseCameraControls())
+                    toolPaint(index);
+                break;
+            case 'pickcolor':
+                setOverlayPlane(pos.add(norm.scale(0.5)), norm, voxels[index].color);
+                if (isMouseDown && pauseCameraControls())
+                    toolPickColor(voxels[index].color);
+                break;
+            case 'fillcolor':
+                setOverlayPlane(pos.add(norm.scale(0.5)), norm, voxels[index].color);
+                if (isMouseDown && pauseCameraControls())
+                    toolFillColor(voxels[index].color);
+                break;
+            case 'hidecolor':
+                setOverlayPlane(pos.add(norm.scale(0.5)), norm, voxels[index].color);
+                if (isMouseDown && pauseCameraControls()) {
+                    toolHideColor(voxels[index].color);
+                    isMouseDown = false; // only once
+                }
+                break;
+        }
+    }
+
+    function toolSwitchEnd() {
+        if (selected.length == 0) return;
+        switch (tool) {
+            case 'add':
+                createSPS();
+                createPalette();
+                break;
+            case 'remove':
+                for (let i in selected)
+                    removeVoxel(selected[i]);
+                createSPS();
+                createPalette();
+                break;
+            case 'hide':
+                for (let i in selected)
+                    selected[i].isVisible = false;
+                updateSPS();
+                break;
+            case 'paint':
+                createPalette();
+                break;
+            case 'fillcolor':
+                updateSPS();
+                createPalette();
+                break;
+            case 'hidecolor':
+                updateSPS();
+                break;
+        }
+        clearDummyVoxels();
+        selected = [];
+    }
+
+    // -----------------------------------------------------------------------------------
+    // Interactions ----------------------------------------------------------------------
+    
+    let isMouseDown = false;
+    let lastCamPos = null;
+    let pick = null;
+
+    function handleToolDown(e) {
+        if (tool == 'camera') return; // speed up navigation
+        isMouseDown = true;
+        lastCamPos = scene.activeCamera.position.clone();
+        pick = scene.pick(scene.pointerX, scene.pointerY, function (mesh) { return mesh === SPS.mesh });
+        if (pick.hit)
+            toolSwitchStart(pick);
+    }
+
+    function handleToolMove(e) {
+        if (tool == 'camera') return;
+        setTimeout(function() { // picking is 100% faster when set timeout, test: try 10000 voxels.
+            pick = scene.pick(scene.pointerX, scene.pointerY, function (mesh) { return mesh === SPS.mesh });
+            if (pick.hit) {
+                toolSwitchStart(pick);
+            } else {
+                clearOverlays();
+            }
+        }, 1000 / 30);
+    }
+
+    function handleToolUp(e) {
+        if (tool == 'camera') { clearOverlays(); return; }
+        isMouseDown = false;
+        toolSwitchEnd();
+        updateShadowMap();
+        scene.activeCamera.attachControl(canvas, true);
+    }
+
+    function pauseCameraControls() { // prevent tools and camera-controls conflict
+        if (!lastCamPos.equals(scene.activeCamera.position)) return false;
+        scene.activeCamera.detachControl(canvas);
+        return true;
+    }
+
+    // -----------------------------------------------------------------------------------
+    // HDR & Rendering -------------------------------------------------------------------
+
+    let hdrTexture = null;
+    let skybox = null;
+    let ssao = null;
+    let pipeline = null;
+
+    function createHDR(url) {
+        if (hdrTexture && skybox)
+            removeHDR();
+        hdrTexture = new BABYLON.HDRCubeTexture(url, scene, 512);
+        hdrTexture.gammaSpace = true;
+        scene.environmentTexture = hdrTexture;
+        defaultMaterial.reflectionTexture = hdrTexture;
+        defaultMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+        skybox = scene.createDefaultSkybox(hdrTexture, true, (scene.activeCamera.maxZ - scene.activeCamera.minZ) / 2, 0.2, true);
+        document.getElementById('check_skybox').checked = true;
+    }
+
+    function removeHDR() {
+        if (hdrTexture && skybox) {
+            if (!confirm("This operation is not undoable, continue?")) return;
+            scene.getMaterialByName("skyBox").getActiveTextures()[0].dispose();
+            scene.getMaterialByName("skyBox").dispose(); // skybox material not disposed successfuly
+            skybox.dispose();
+            hdrTexture.dispose();
+            skybox = null;
+            hdrTexture = null;
+            defaultMaterial.reflectionTexture = gridTexture; // reset reflection
+            defaultMaterial.reflectionTexture.coordinatesMode = 0; //default coordinate
+            document.getElementById('check_skybox').checked = false;
+        } else {
+            showNotification('HDR not loaded');
+        }
+    }
+
+    function toggleSkybox() {
+        if (skybox && skybox.isVisible) {
+            skybox.isVisible = false;
+            document.getElementById('check_skybox').checked = false;
+        } else {
+            if (skybox) {
+                skybox.isVisible = true;
+                document.getElementById('check_skybox').checked = true;
+            } else {
+                showNotification('HDR not loaded');
+                document.getElementById('check_skybox').checked = false;
+            }
+        }
+    }
+
+    function toggleHighQuality() {
+        if (ssao && pipeline) {
+            removeHighQuality();
+        } else {
+            ssao = new BABYLON.SSAORenderingPipeline("ssao", scene, { ssaoRatio: 0.5, combineRatio: 1.0 }, [scene.activeCamera]);
+            ssao.fallOff = 0.00001;
+            ssao.area = 1;
+            ssao.radius = 0.0001;
+            ssao.totalStrength = 0.9;
+            ssao.base = 0.5;
+            pipeline = new BABYLON.DefaultRenderingPipeline("default", false, scene, [scene.activeCamera]); //false:hdr
+            const curve = new BABYLON.ColorCurves();
+            curve.globalHue = 200;
+            curve.globalDensity = 80;
+            curve.globalSaturation = 80;
+            curve.highlightsHue = 20;
+            curve.highlightsDensity = 80;
+            curve.highlightsSaturation = -80;
+            curve.shadowsHue = 2;
+            curve.shadowsDensity = 80;
+            curve.shadowsSaturation = 40;
+            pipeline.imageProcessingEnabled = true;
+            pipeline.imageProcessing.toneMappingEnabled = true;
+            pipeline.imageProcessing.contrast = 0;
+            pipeline.imageProcessing.exposure = 0;
+            pipeline.imageProcessing.colorCurvesEnabled = true;
+            pipeline.imageProcessing.colorCurves = curve;
+            pipeline.fxaaEnabled = true; //pipeline.samples = 4;
+            pipeline.sharpenEnabled = true;
+            pipeline.sharpen.edgeAmount = 0.2;
+            pipeline.sharpen.colorAmount = 1.0;
+            pipeline.bloomEnabled = true;
+            pipeline.bloomThreshold = 0.8;
+            pipeline.bloomWeight = 0.3;
+            pipeline.bloomKernel = 64;
+            pipeline.bloomScale = 0.5;
+            pipeline.chromaticAberrationEnabled = true;
+            pipeline.chromaticAberration.aberrationAmount = 150;
+            pipeline.chromaticAberration.radialIntensity = 5;
+            pipeline.chromaticAberration.direction.x = Math.sin(Math.PI);
+            pipeline.chromaticAberration.direction.y = Math.cos(Math.PI);
+            pipeline.grainEnabled = true;
+            pipeline.grain.intensity = 2;
+            pipeline.grain.animated = false;
+            //pipeline.depthOfFieldEnabled = false;       // TODO: set relative to camera
+            //pipeline.depthOfFieldBlurLevel = BABYLON.DepthOfFieldEffectBlurLevel.Low;
+            //pipeline.depthOfField.focusDistance = 1000; // distance of the current focus point from the camera in millimeters considering 1 scene unit is 1 meter
+            //pipeline.depthOfField.focalLength = 50;     // focal length of the camera in millimeters
+            //pipeline.depthOfField.fStop = 1.0;          // aka F number of the camera defined in stops as it would be on a physical device
+        }
+    }
+
+    function removeHighQuality() {
+        if (ssao && pipeline) {
+            ssao.dispose();
+            ssao = null;
+            pipeline.dispose();
+            pipeline = null;
+        }
+    }
+
+    // -----------------------------------------------------------------------------------
+    // Files -----------------------------------------------------------------------------
+
+    function newProject() {
+        if (!confirm("Discard current project?")) return;
+        let data = [];
+        data.push({ position: new BABYLON.Vector3(0.5, 0, 0.5),   color: currentColor });
+        data.push({ position: new BABYLON.Vector3(-0.5, 0, -0.5), color: currentColor });
+        createBlock(data);
+        data = null;
+    }
+
+    function loadProject(voxdata) {
+        const lines = voxdata.split('\n');
+        let data = [];
+        let chunk = [];
+        let line = '';
+        for (let i in lines) {
+            if (lines[i]) { // ignore empty lines
+                line = lines[i].replace(/\s+/g, ''); // strip whitespaces
+                chunk = line.split(',');
+                data.push({ 
+                    position: new BABYLON.Vector3(parseFloat(chunk[0]), parseFloat(chunk[1]), parseFloat(chunk[2])),
+                    color: chunk[3]
+                });
+            }
+        }
+        createBlock(data);
+        data = null;
+    }
+
+    function saveProject() {
+        let data = '';
+        for (let i in voxels)
+            data += voxels[i].position.x + ',' + voxels[i].position.y + ',' + voxels[i].position.z + ',' + voxels[i].color + '\n';
+        downloadFile(data, 'project.vox');
+        data = null;
+    }
+
+    function importMesh(url, ext) {
+        const scale = document.getElementById('user-input-voxelization').value;
+        toggleLoadingScreen();
+        BABYLON.SceneLoader.LoadAssetContainerAsync(url, "", scene, null, ext).then(function(container) {
+            const mesh = BABYLON.Mesh.MergeMeshes(container.meshes, true, true); // we calculate random points per surface area,
+            normalizeImportedMesh(mesh, scale);                                  // voxel is 1x1x1, so larger mesh size equals to more voxels,
+            let pointData = getRandomPointsOnMeshSurface(mesh);                  // and longer surface require more points to fill details.
+            const bounds = mesh.getBoundingInfo();
+            const center = bounds.boundingBox.centerWorld;
+            const size = getMeshSize(bounds);
+            size.x = size.x / 2;
+            size.y = size.y / 2;
+            size.z = size.z / 2;
+            mesh.dispose();
+
+            let voxelGrid = [];
+            for (let x = -size.x; x <= size.x; x++) {   // create grid of voxels
+                for (let y = 0; y <= size.y * 2; y++) { // mesh dropped to floor with normalizeImportedMesh()
+                    for (let z = -size.z; z <= size.z; z++) {
+                        voxelGrid.push(new BABYLON.Vector3(center.x - x, y, center.z - z));
+                    }
+                }
+            }
+
+            // voxelization
+            let data = [];
+            let unique = [];
+            let distance = 0;
+            for (let p = 0; p < pointData.length; p++) {
+                for (let v = 0; v < voxelGrid.length; v++) {
+                    distance = BABYLON.Vector3.Distance(pointData[p], voxelGrid[v]); // compare voxel position to point cloud data
+                    if (distance <= 1 && unique.indexOf(voxelGrid[v]) == -1) {       // unique to prevent duplicates
+                        data.push({ position: voxelGrid[v], color: currentColor });
+                        unique.push(voxelGrid[v]);
+                    }
+                }
+            }
+            
+            createBlock(data);
+            
+            data = null;
+            unique = null;
+            pointData = null;
+            voxelGrid = null;
+            toggleLoadingScreen();
+
+        }).catch(function(reason) {
+            toggleLoadingScreen();
+            showNotification("Unable to import model");
+            console.error(reason.message);
+        });
+    }
+
+    function exportMesh() {
+        let mesh = SPS.mesh.clone();
+        mesh.position.y += 0.5;
+        const options = {
+            shouldExportNode: function(node) {
+                return node === mesh;
+            }
+        }
+        BABYLON.GLTF2Export.GLBAsync(scene, "exported", options).then((glb) => {
+            glb.downloadFiles();
+            mesh.dispose();
+            mesh = null;
+        });
+    }
+
+    // -----------------------------------------------------------------------------------
+    // Local Storage ---------------------------------------------------------------------
+
+    function setStorage() {
+        localStorage.setItem("voxelstorage", JSON.stringify(voxels));
+    }
+    
+    function getStorage() {
+        let data = JSON.parse(localStorage.getItem("voxelstorage"));
+        if (!data) {
+            showNotification("Empty Storage");
+            return;
+        }
+        if (!confirm("This operation is not undoable, continue?")) return;
+        let newData = [];
+        for (let i in data) {
+            newData.push({
+                position: new BABYLON.Vector3(data[i].position._x, data[i].position._y, data[i].position._z),
+                color: data[i].color
+            });
+        }
+        createBlock(newData);
+        data = null;
+        newData = null;
+    }
+
+    // -----------------------------------------------------------------------------------
+    // Create ----------------------------------------------------------------------------
+
+    function createGrid() {
+        if (!confirm("Discard current project?")) return;
+        const X = (document.getElementById('user-input-create-x').value - 1) / 2;
+        const Y = (document.getElementById('user-input-create-y').value - 1) / 2;
+        const Z = (document.getElementById('user-input-create-z').value - 1) / 2;
+        let data = [];
+        for (let x = -X; x <= X; x++) {
+            for (let y = 0; y <= Y * 2; y++) {
+                for (let z = -Z; z <= Z; z++) {
+                    data.push({ position: new BABYLON.Vector3(x, y, z), color: currentColor });
+                }
+            }
+        }
+        createBlock(data);
+        data = null;
+    }
+
+    function createRandom() {
+        if (!confirm("Discard current project?")) return;
+        const X = (document.getElementById('user-input-create-x').value - 1) / 2;
+        const min = 0; // Y min, floor
+        const max = document.getElementById('user-input-create-y').value; // Y max
+        const Z = (document.getElementById('user-input-create-z').value - 1) / 2;
+        let data = [];
+        let rng = 0;
+        for (let x = -X; x <= X; x++) {
+            for (let z = -Z; z <= Z; z++) {
+                rng = Math.random() * (max - min) + min;
+                data.push({ position: new BABYLON.Vector3(x, rng, z), color: currentColor });
+            }
+        }
+        createBlock(data);
+        data = null;
+    }
+
+    // -----------------------------------------------------------------------------------
+    // Events ----------------------------------------------------------------------------
+
+    window.addEventListener("resize", function () { 
+        engine.resize();
+        sceneAxisView.activeCamera.viewport = updateViewport(80, 80, 0, 0);
+    }, false);
+
+    canvas.addEventListener("pointerdown", handleToolDown, false);
+    canvas.addEventListener("pointerup", handleToolUp, false);
+    canvas.addEventListener("pointermove", handleToolMove, false);
+    canvas.addEventListener("touchstart", handleToolDown, { passive: true });
+    canvas.addEventListener("touchend", handleToolUp, false);
+    canvas.addEventListener("touchmove", handleToolMove, { passive: true });
+    scene.onDispose = function () {
+        canvas.removeEventListener("pointerdown", handleToolDown);
+        canvas.removeEventListener("pointerup", handleToolUp);
+        canvas.removeEventListener("pointermove", handleToolMove);
+        canvas.removeEventListener("touchstart", handleToolDown);
+        canvas.removeEventListener("touchend", handleToolUp);
+        canvas.removeEventListener("touchmove", handleToolMove);
+    }
+
+    document.getElementById('openfile_vox').addEventListener("change", function (e) {
+        if (e.target.files.length > 0) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function() {
+                loadProject(reader.result);
+            }
+            reader.readAsText(file);
+        }
+    }, false);
+
+    document.getElementById('openfile_obj').addEventListener("change", function (e) {
+        if (e.target.files.length > 0) {
+            const file = e.target.files[0];
+            const ext = file.name.substring(file.name.length - 4, file.name.length); //.ext
+            const url = URL.createObjectURL(file);
+            importMesh(url, ext);
+            URL.revokeObjectURL(url);
+        }
+    }, false);
+
+    document.getElementById('openfile_hdr').addEventListener("change", function (e) {
+        if (e.target.files.length > 0) {
+            const file = e.target.files[0];
+            const url = URL.createObjectURL(file);
+            createHDR(url);
+            URL.revokeObjectURL(url);
+        }
+    }, false);
+
+    inputColor.addEventListener("input", function (e) {
+        currentColor = this.value.toUpperCase();
+    }, false);
+
+    // -----------------------------------------------------------------------------------
+    // Utilities: babylon ----------------------------------------------------------------
+
+    function clearAllToggles() {
+        scene.getNodeByName("grid").isVisible = true;           //toggleGround
+        scene.getNodeByName("shadowcatcher").isVisible = true;  //toggleShadowCatcher
+        defaultMaterial.wireframe = false;                      //toggleShowWireframe
+        SPS.mesh.showBoundingBox = false;                       //toggleBoundingBox
+        defaultMaterial.emissiveIntensity = 0.1;                //toggleShowGridTexture
+        removeHighQuality();                                    //toggleHighQuality
+    }
+
+    function toggleGround() {
+        if (scene.getNodeByName("grid").isVisible) {
+            scene.getNodeByName("grid").isVisible = false;
+        } else {
+            scene.getNodeByName("grid").isVisible = true;
+        }
+    }
+
+    function toggleShadowCatcher() {
+        if (scene.getNodeByName("shadowcatcher").isVisible) {
+            scene.getNodeByName("shadowcatcher").isVisible = false;
+        } else {
+            scene.getNodeByName("shadowcatcher").isVisible = true;
+        }
+    }
+
+    function toggleShowWireframe() {
+        if (defaultMaterial.wireframe) {
+            defaultMaterial.wireframe = false;
+        } else {
+            defaultMaterial.wireframe = true;
+        }
+    }
+
+    function toggleShowGridTexture() {
+        if (defaultMaterial.emissiveIntensity == 0) {
+            defaultMaterial.emissiveIntensity = 0.1;
+        } else {
+            defaultMaterial.emissiveIntensity = 0;
+        }
+    }
+
+    function toggleBoundingBox() {
+        SPS.mesh.showBoundingBox = !SPS.mesh.showBoundingBox;
+    }
+
+    function setParticlesVisibility(isVisible) {
+        for (let i in SPS.particles)
+            SPS.particles[i].isVisible = isVisible;
+        updateSPS();
+    }
+
+    function setLightPositionByAngle(light, angle, distance, height) {
+        const x = Math.cos(angle * Math.PI / 180) * distance;
+        const y = height;
+        const z = Math.sin(angle * Math.PI / 180) * distance;
+        const pos = new BABYLON.Vector3(x, y, z);
+        light.position = pos; // our primary shadow light
+        light.setDirectionToTarget(BABYLON.Vector3.Zero());
+    }
+
+    function updateShadowMap() {
+        scene.lights[1].getShadowGenerator().getShadowMap().refreshRate = BABYLON.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
+    }
+
+    function fitCameraToMesh() {
+        const bounds = SPS.mesh.getBoundingInfo().boundingSphere;
+        const radius = bounds.radiusWorld;
+        scene.activeCamera.setPosition(new BABYLON.Vector3(radius * 4, radius * 4, radius * 4));
+        scene.activeCamera.setTarget(bounds.center.clone());
+    }
+
+    function toggleCameraAutoRotation() {
+        scene.activeCamera.idleRotationWaitTime = 0;
+        scene.activeCamera.useAutoRotationBehavior = !scene.activeCamera.useAutoRotationBehavior;
+        document.getElementById('check_autorotation').checked = scene.activeCamera.useAutoRotationBehavior;
+    }
+
+    function updateViewport(w, h, bottom, right) {
+        const width = canvas.width;
+        const height = canvas.height;
+        return new BABYLON.Viewport(1 - (w + right) / width, 1 - (bottom + height) / height,   w / width, h / height);
+    }
+
+    function normalizeImportedMesh(mesh, scale) {
+        // normalize scale
+        let bounds = mesh.getBoundingInfo();
+        let size = getMeshSize(bounds);
+        const scaleFactor = Math.min(scale / size.x, scale / size.y, scale / size.z);
+        mesh.bakeTransformIntoVertices(BABYLON.Matrix.Scaling(scaleFactor, scaleFactor, scaleFactor));
+        // center mesh and drop to floor
+        bounds = mesh.getBoundingInfo();
+        size = getMeshSize(bounds);
+        const center = bounds.boundingBox.center;
+        const newX = (-bounds.maximum.x) + (size.x / 2);
+        const newY = (size.y / 2) - (center.y);
+        const newZ = (-bounds.maximum.z) + (size.z / 2);
+        mesh.bakeTransformIntoVertices(BABYLON.Matrix.Translation(newX, newY, newZ));
+    }
+
+    function normalizeVoxelPositions() {
+        const bounds = SPS.mesh.getBoundingInfo();
+        const size = getMeshSize(bounds);
+        const center = bounds.boundingBox.center;
+        const newX = (-bounds.maximum.x) + (size.x / 2);
+        const newY = ((size.y / 2) - center.y) - 0.5;
+        const newZ = (-bounds.maximum.z) + (size.z / 2);
+        let pos = null;
+        let mat = null;
+        for (let i in voxels) {
+            mat = BABYLON.Matrix.Translation(newX, newY, newZ);
+            pos = BABYLON.Vector3.TransformCoordinates(voxels[i].position, mat);
+            setVoxelPosition(i, pos);
+        }
+        updateSPS();
+    }
+
+    function freezeVisibility() {
+        if (!confirm("This operation is not undoable, continue?")) return;
+        for (let i in SPS.particles) {
+            if (!SPS.particles[i].isVisible) {
+                removeVoxel(SPS.particles[i].position);
+            }
+        }
+        createSPS();
+        createPalette();
+    }
+
+    function getMeshSize(bounds) {
+        const size = new BABYLON.Vector3();
+        size.x = Math.abs(bounds.minimum.x - bounds.maximum.x);
+        size.y = Math.abs(bounds.minimum.y - bounds.maximum.y);
+        size.z = Math.abs(bounds.minimum.z - bounds.maximum.z);
+        return size;
+    }
+
+    function getRandomPointsOnMeshSurface(mesh) {
+        const minDist = 0.5; // max=1, lower distance capture more details
+        let positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+        let indices = mesh.getIndices();
+        let points = [];
+        let id0 = 0, id1 = 0, id2 = 0;
+        let v0X = 0, v0Y = 0, v0Z = 0, v1X = 0, v1Y = 0, v1Z = 0, v2X = 0, v2Y = 0, v2Z = 0;
+        let vertex0 = BABYLON.Vector3.Zero(), vertex1 = BABYLON.Vector3.Zero(), vertex2 = BABYLON.Vector3.Zero();
+        let vec0 = BABYLON.Vector3.Zero(), vec1 = BABYLON.Vector3.Zero(), vec2 = BABYLON.Vector3.Zero();
+        let area = 0, crossX = 0, crossY = 0, crossZ = 0;
+        let a = 0, b = 0;
+        for (let index = 0; index < indices.length / 3; index++) {
+            id0 = indices[index * 3 + 0];
+            id1 = indices[index * 3 + 1];
+            id2 = indices[index * 3 + 2];
+            v0X = positions[id0 * 3 + 0];
+            v0Y = positions[id0 * 3 + 1];
+            v0Z = positions[id0 * 3 + 2];
+            v1X = positions[id1 * 3 + 0];
+            v1Y = positions[id1 * 3 + 1];
+            v1Z = positions[id1 * 3 + 2];
+            v2X = positions[id2 * 3 + 0];
+            v2Y = positions[id2 * 3 + 1];
+            v2Z = positions[id2 * 3 + 2];
+            vertex0.set(v0X, v0Y, v0Z);
+            vertex1.set(v1X, v1Y, v1Z);
+            vertex2.set(v2X, v2Y, v2Z);
+            vertex1.subtractToRef(vertex0, vec0);
+            vertex2.subtractToRef(vertex1, vec1);
+            vertex2.subtractToRef(vertex0, vec2);
+            crossX = (v0Y - v1Y) * (v2Z - v1Z) - (v0Z - v1Z) * (v2Y - v1Y); // calculate face area
+            crossY = (v0Z - v1Z) * (v2X - v1X) - (v0X - v1X) * (v2Z - v1Z);
+            crossZ = (v0X - v1X) * (v2Y - v1Y) - (v0Y - v1Y) * (v2X - v1X);
+            area = Math.sqrt(crossX * crossX + crossY * crossY + crossZ * crossZ) * 0.5;
+            for (let i = 0; i < area; i++) { // create a point inside the facet v0, v1, v2
+                a = BABYLON.Scalar.RandomRange(0, 1);
+                b = BABYLON.Scalar.RandomRange(0, 1);
+                if (a + b > minDist) // removing unnecassary points to save resources
+                    points.push( vertex0.add(vec0.scale(a)).add(vec1.scale(a * b)) );
+            }
+        }
+        positions = null;
+        indices = null;
+        return points;
+    }
+
+    function optimize() {
+        toggleLoadingScreen();
+        scene.activeCamera.detachControl(canvas);
+        engine.clearInternalTexturesCache();
+        scene.cleanCachedTextureBuffer();
+        BABYLON.Tools.ClearLogCache();
+        BABYLON.SceneOptimizer.OptimizeAsync(scene, BABYLON.SceneOptimizerOptions.LowDegradationAllowed(),
+        function() {
+            scene.activeCamera.attachControl(canvas, true);
+            toggleLoadingScreen();
+            showNotification('Optimized');
+        }, function() {
+            scene.activeCamera.attachControl(canvas, true);
+            toggleLoadingScreen();
+            showNotification('Optimization Failed');
+        });
+    }
+
+    // -----------------------------------------------------------------------------------
+    // Utilities: html -------------------------------------------------------------------
+
+    let beginTime = (performance || Date).now(), prevTime = beginTime, frames = 0, fps = 0;
+    function beginPerformanceMonitor() {
+        beginTime = (performance || Date).now();
+    }
+    function endPerformanceMonitor() {
+        frames ++;
+        let time = (performance || Date).now();
+        if (time >= prevTime + 1000) {
+            fps = Math.round((frames * 1000) / (time - prevTime));
+            prevTime = time;
+			frames = 0;
+            numFps.innerHTML = fps;
+            if (fps < 50) numFps.style.color = 'red';
+            else numFps.style.color = 'greenyellow';
+        }
+    }
+
+    function updateStatus() {
+        const verts = SPS.mesh.getTotalVertices();
+        document.getElementById('voxels').innerHTML = voxels.length;
+        document.getElementById('verts').innerHTML = verts;
+        document.getElementById('tris').innerHTML = (verts / 2).toFixed();
+    }
+
+    // dynamically create color(li) inside palette(ul)
+    function addColorToPalette(hexcolor) {
+        const li = document.createElement('li');
+        li.style.backgroundColor = hexcolor;
+        li.title = hexcolor;
+        li.addEventListener("click", function() {
+            inputColor.value = rgb2hex(this.style.backgroundColor);
+            currentColor = rgb2hex(this.style.backgroundColor);
+        });
+        document.getElementById('color_palette').appendChild(li);
+    }
+
+    function rgb2hex(rgb) {
+        rgb = rgb.replace('rgb(','').replace(')','').split(',');
+        const result = rgb[2] | (rgb[1] << 8) | (rgb[0] << 16);
+        const hex = '#' + (0x1000000 + result).toString(16).slice(1);
+        return hex.toUpperCase();
+    }
+
+    function showNotification(txt) {
+        notifier.innerHTML = txt;
+        notifier.classList.toggle('fade');
+        setTimeout(function() {
+            notifier.classList.toggle('fade');
+        }, 3000);
+    }
+
+    function toggleLoadingScreen() {
+        const elem = document.getElementById('loadingscreen');
+        elem.style.display = elem.style.display === 'unset' ? 'none' : 'unset';
+    }
+
+    function clearButtons(li) {
+        for (let i of document.querySelectorAll('li'))
+            i.classList.remove("select");
+        li.classList.add("select");
+    }
+
+    function toggleButton(li) {
+        if (li.classList.contains("toggle"))
+            li.classList.remove("toggle");
+        else
+            li.classList.add("toggle");
+    }
+
+    function clearAllToggleButtons() {
+        for (let i of document.querySelectorAll('li'))
+            i.classList.remove("toggle");
+    }
+
+    function toggleFullscreen() {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+            document.getElementById('check_fullscreen').checked = false;
+        } else {
+            document.body.requestFullscreen();
+            document.getElementById('check_fullscreen').checked = true;
+        }
+    }
+
+    function downloadFile(txt, filename) {
+        const blob = new Blob([ txt ], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function isMobileDevice() {
+        if (/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|ipad|iris|kindle|Android|Silk|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i.test(navigator.userAgent) 
+            || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(navigator.userAgent.substr(0,4))) { 
+            return true;
+        }
+        return false;
+    }
+
+    // make div draggable, elem is a move handle and elem.parentElement is our movable div
+    let xOffset = 0, yOffset = 0;
+    function dragElement(elem) {
+        let active = false;
+        let currentX, currentY, initialX, initialY;
+
+        // prevent fast-dragging problem with background elements
+        document.body.addEventListener("pointerdown", dragStart, false);
+        document.body.addEventListener("pointerup", dragEnd, false);
+        document.body.addEventListener("pointermove", drag, false);
+        document.body.addEventListener("touchstart", dragStart, false);
+        document.body.addEventListener("touchend", dragEnd, false);
+        document.body.addEventListener("touchmove", drag, false);
+
+        function dragStart(e) {
+            if (e.type === "touchstart") {
+                initialX = e.touches[0].clientX - xOffset;
+                initialY = e.touches[0].clientY - yOffset;
+            } else {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+            }
+            if (e.target === elem)
+                active = true;
+        }
+
+        function dragEnd(e) {
+            initialX = currentX;
+            initialY = currentY;
+            active = false;
+            document.body.removeEventListener("pointerdown", dragStart, false);
+            document.body.removeEventListener("pointerup", dragEnd, false);
+            document.body.removeEventListener("pointermove", drag, false);
+            document.body.removeEventListener("touchstart", dragStart, false);
+            document.body.removeEventListener("touchend", dragEnd, false);
+            document.body.removeEventListener("touchmove", drag, false);
+        }
+
+        function drag(e) {
+            if (active) {
+                if (e.type === "touchmove") {
+                    currentX = e.touches[0].clientX - initialX;
+                    currentY = e.touches[0].clientY - initialY;
+                } else {
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                }
+                xOffset = currentX;
+                yOffset = currentY;
+                setTranslate(currentX, currentY, elem.parentElement);
+            }
+        }
+
+        function setTranslate(xPos, yPos, el) {
+            el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
+        }
+    }
+
+    // -----------------------------------------------------------------------------------
+    // Startup ---------------------------------------------------------------------------
+
+    const STARTUP = `-1,0,-1,#3876C0
+                    -1,0,0,#3876C0
+                    -1,0,1,#3876C0
+                    -1,1,-1,#33D7BE
+                    -1,1,0,#33D7BE
+                    -1,1,1,#33D7BE
+                    -1,2,-1,#B262A0
+                    -1,2,0,#B262A0
+                    -1,2,1,#B262A0
+                    0,0,-1,#3876C0
+                    0,0,0,#3876C0
+                    0,0,1,#3876C0
+                    0,1,-1,#33D7BE
+                    0,1,0,#3876C0
+                    0,1,1,#33D7BE
+                    0,2,-1,#B262A0
+                    0,2,0,#33D7BE
+                    0,2,1,#B262A0
+                    1,0,-1,#3876C0
+                    1,0,0,#3876C0
+                    1,0,1,#3876C0
+                    1,1,-1,#33D7BE
+                    1,1,0,#33D7BE
+                    1,1,1,#33D7BE
+                    1,2,-1,#B262A0
+                    1,2,0,#B262A0
+                    1,2,1,#B262A0`
+    loadProject(STARTUP);
+
+</script>
+</html>

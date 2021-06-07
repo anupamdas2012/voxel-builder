@@ -1,0 +1,15 @@
+{
+  "name": "voxel-builder",
+  "version": "3.4.1",
+  "description": "3D voxel modeling application in Babylon.js engine",
+  "repository": "https://github.com/nimadez/voxel-builder",
+  "author": "nimadez",
+  "license": "MIT",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^12.0.8"
+  }
+}
